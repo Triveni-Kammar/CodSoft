@@ -1,0 +1,234 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>AI Image Captioning</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Poppins', system-ui, sans-serif;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      margin: 0;
+      
+      background-image: 
+        linear-gradient(135deg, rgba(0, 0, 0, 0.6), rgba(75, 0, 130, 0.6)),
+      url('https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&w=1920&q=80');
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      background-attachment: fixed;
+      background-blend-mode: overlay;
+
+      animation: gradientShift 8s ease infinite;
+    }
+
+    @keyframes gradientShift {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+
+    .card {
+      width: 760px;
+      max-width: 90vw;
+      background: rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(16px);
+      border-radius: 16px;
+      padding: 32px;
+      box-shadow: 0 8px 40px rgba(0, 0, 0, 0.3);
+      color: #fff;
+      text-align: center;
+    }
+
+    h1 {
+      font-size: 28px;
+      font-weight: 700;
+      margin-bottom: 12px;
+    }
+
+    p.lead {
+      color: #e0e7ff;
+      margin-bottom: 24px;
+      font-size: 15px;
+    }
+
+    .upload-area {
+      display: flex;
+      gap: 24px;
+      align-items: center;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    .preview {
+      width: 260px;
+      height: 260px;
+      background: rgba(255,255,255,0.08);
+      border: 2px dashed rgba(255,255,255,0.4);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 12px;
+      overflow: hidden;
+      transition: all 0.3s ease;
+    }
+
+    .preview:hover {
+      border-color: #fff;
+      transform: scale(1.02);
+    }
+
+    .preview img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .controls {
+      flex: 1;
+      min-width: 260px;
+      text-align: left;
+    }
+
+    input[type="file"] {
+      background: rgba(255, 255, 255, 0.15);
+      border: none;
+      border-radius: 8px;
+      padding: 10px;
+      width: 100%;
+      color: #fff;
+      cursor: pointer;
+      margin-bottom: 14px;
+    }
+
+    input[type="file"]::-webkit-file-upload-button {
+      background: #6366f1;
+      border: none;
+      color: #fff;
+      padding: 8px 14px;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: background 0.3s ease;
+    }
+
+    input[type="file"]::-webkit-file-upload-button:hover {
+      background: #4f46e5;
+    }
+
+    button {
+      padding: 12px 20px;
+      border-radius: 10px;
+      border: none;
+      cursor: pointer;
+      background: linear-gradient(90deg, #4f46e5, #9333ea);
+      color: white;
+      font-weight: 600;
+      box-shadow: 0 6px 20px rgba(99,102,241,0.25);
+      transition: transform 0.2s ease, box-shadow 0.3s ease;
+    }
+
+    button:hover {
+      transform: scale(1.05);
+      box-shadow: 0 10px 25px rgba(147,51,234,0.4);
+    }
+
+    .caption {
+      margin-top: 20px;
+      padding: 14px;
+      border-radius: 10px;
+      background: rgba(255, 255, 255, 0.12);
+      color: #f1f5f9;
+      font-size: 16px;
+      min-height: 50px;
+      text-align: left;
+      white-space: pre-wrap;
+      transition: background 0.3s ease;
+    }
+
+    .caption:hover {
+      background: rgba(255, 255, 255, 0.2);
+    }
+
+    .small {
+      color: #d1d5db;
+      font-size: 13px;
+      margin-left: 10px;
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>🧠 AI Image Captioning</h1>
+    <p class="lead">Upload an image and let our AI describe it in natural language.</p>
+
+    <div class="upload-area">
+      <div class="preview" id="preview">📷 Preview</div>
+      <div class="controls">
+        <input id="fileInput" type="file" accept="image/*" />
+        <div>
+          <button id="captionBtn">✨ Generate Caption</button>
+          <span class="small" id="status"></span>
+        </div>
+        <div class="caption" id="captionBox">No caption yet.</div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const fileInput = document.getElementById('fileInput');
+    const preview = document.getElementById('preview');
+    const captionBtn = document.getElementById('captionBtn');
+    const status = document.getElementById('status');
+    const captionBox = document.getElementById('captionBox');
+
+    let selectedFile = null;
+
+    fileInput.addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      selectedFile = file;
+      const img = document.createElement('img');
+      img.src = URL.createObjectURL(file);
+      img.onload = () => URL.revokeObjectURL(img.src);
+      preview.innerHTML = '';
+      preview.appendChild(img);
+      captionBox.textContent = 'Ready to generate caption.';
+    });
+
+    captionBtn.addEventListener('click', async () => {
+      if (!selectedFile) {
+        alert('Please choose an image first.');
+        return;
+      }
+      status.textContent = '⏳ Sending image...';
+      captionBox.textContent = '';
+      const form = new FormData();
+      form.append('image', selectedFile);
+
+      try {
+        const res = await fetch('/caption', { method: 'POST', body: form });
+        if (!res.ok) {
+          const err = await res.json();
+          captionBox.textContent = '⚠️ Error: ' + (err.error || res.statusText);
+          status.textContent = '';
+          return;
+        }
+        const data = await res.json();
+        captionBox.textContent = '🖼️ ' + (data.caption || 'No caption returned.');
+        status.textContent = '✅ Done';
+      } catch (e) {
+        captionBox.textContent = '❌ Request failed: ' + e.message;
+        status.textContent = '';
+      }
+    });
+  </script>
+</body>
+</html>
