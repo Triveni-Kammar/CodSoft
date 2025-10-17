@@ -53,8 +53,4 @@ It combines computer vision and natural language processing.
 - Developed understanding of **Python logic and AI integration**  
 - Built web interfaces using **HTML**  
 - Implemented both **rule-based** and **AI-based** systems  
-- Enhanced knowledge of **Flask** for simple web applications  
-
----
-
-## 📁 Project Structure Example
+- Enhanced knowledge of **Flask** for simple web applications.
